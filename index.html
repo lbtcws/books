@@ -4,7 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文双的博客 | Insight Hub</title>
+    <title>码外人生 | feZsy's Insight Hub</title>
+
+    <!-- 引用你下载到本地 lib 目录下的库 -->
+    <link rel="stylesheet" href="./lib/github-markdown.min.css">
+    <script src="./lib/marked.min.js"></script>
+
     <style>
         :root {
             --sidebar-width: 280px;
@@ -20,12 +25,12 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+            font-family: -apple-system, "PingFang SC", sans-serif;
             background: #fff;
             color: #333;
         }
 
-        /* --- 侧边栏布局 --- */
+        /* --- 侧边栏 --- */
         #sidebar {
             width: var(--sidebar-width);
             height: 100%;
@@ -40,7 +45,7 @@
         }
 
         body.collapsed #sidebar {
-            margin-left: calc(var(--sidebar-width) * -1);
+            margin-left: calc(var(--sidebar-width) * -1 - 5px);
         }
 
         #module-container {
@@ -66,13 +71,13 @@
             align-items: center;
             padding: 0 15px;
             box-sizing: border-box;
-            color: #888;
-            font-size: 13px;
-            font-weight: 500;
+            color: #444;
+            font-size: 14px;
+            font-weight: 600;
             white-space: nowrap;
         }
 
-        /* --- 树形菜单样式 --- */
+        /* --- 树形菜单 --- */
         .tree-category {
             padding: 10px 12px;
             cursor: pointer;
@@ -93,7 +98,6 @@
             transition: 0.2s;
         }
 
-        /* 展开状态的旋转逻辑 */
         .tree-category.open::before {
             transform: rotate(90deg);
         }
@@ -123,7 +127,7 @@
             background: #fff5f0;
         }
 
-        /* --- 主内容区 --- */
+        /* --- 主视口 --- */
         #main-viewport {
             flex: 1;
             display: flex;
@@ -133,28 +137,7 @@
             position: relative;
         }
 
-        /* --- Tooltip 样式 --- */
-        [data-tooltip]::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            background: #333;
-            color: #fff;
-            font-size: 11px;
-            padding: 6px 12px;
-            border-radius: 4px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: 0.2s;
-            z-index: 110;
-        }
-
-        [data-tooltip]:hover::after {
-            opacity: 1;
-            transform: translateY(-5px);
-        }
-
-        /* 切换按钮 (左下角) */
+        /* --- 按钮 & Tooltip --- */
         #toggle-btn {
             position: absolute;
             bottom: 9px;
@@ -172,20 +155,33 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
-        #toggle-btn svg {
-            transition: transform var(--transition);
-        }
-
         body.collapsed #toggle-btn svg {
             transform: rotate(180deg);
         }
 
-        #toggle-btn::after {
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background: #333;
+            color: #fff;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+            z-index: 110;
             bottom: 42px;
             left: 0;
         }
 
-        /* 详情面板 (摘要) */
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+
+        /* --- 摘要面板 --- */
         #info-panel {
             padding: 20px 40px 20px 60px;
             background: #fffaf8;
@@ -207,11 +203,6 @@
             background: #fff;
         }
 
-        .close-panel-btn:hover {
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
         .summary-content {
             color: #666;
             line-height: 1.6;
@@ -222,13 +213,42 @@
             white-space: pre-wrap;
         }
 
-        /* --- 渲染区域 --- */
+        /* --- 渲染区域容器 --- */
         #render-container {
             flex: 1;
             background: #fff;
             position: relative;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Markdown 滚动层 */
+        #md-wrapper {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            display: none;
+            background: #fff;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .markdown-body {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 45px;
+            background: transparent !important;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+            background: #fff;
         }
 
         #download-card {
@@ -238,12 +258,6 @@
             justify-content: center;
             height: 100%;
             text-align: center;
-            padding: 40px;
-        }
-
-        .download-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
         }
 
         .download-btn {
@@ -254,12 +268,6 @@
             text-decoration: none;
             border-radius: 6px;
             font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .download-btn:hover {
-            background: #d44f00;
-            transform: translateY(-2px);
         }
 
         #floating-action-trigger {
@@ -280,19 +288,6 @@
             font-size: 20px;
         }
 
-        #floating-action-trigger::after {
-            content: "查看概要";
-            bottom: 55px;
-            right: 0;
-        }
-
-        iframe {
-            flex: 1;
-            width: 100%;
-            border: none;
-            background: #fff;
-        }
-
         .empty-placeholder {
             display: flex;
             align-items: center;
@@ -308,19 +303,14 @@
 
 <body>
 
-    <!-- 侧边栏 -->
     <div id="sidebar">
         <div id="module-container">
-            <div class="module-label">Library / 书籍</div>
+            <div class="module-label">Assets / 数字资产</div>
             <div id="book-tree"></div>
         </div>
-
-        <div class="sidebar-footer">
-            <span style="margin-left: 35px;">码外人生</span>
-        </div>
+        <div class="sidebar-footer"><span style="margin-left: 35px;">码外人生</span></div>
     </div>
 
-    <!-- 切换按钮 -->
     <button id="toggle-btn" onclick="toggleSidebar()" data-tooltip="收起菜单">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
             <path
@@ -337,13 +327,20 @@
 
         <div id="render-container">
             <div id="floating-action-trigger" onclick="setPanelVisible(true)" data-tooltip="查看详情">💡</div>
-            <div class="empty-placeholder" id="welcome-msg">开启深度阅读与思考</div>
-            <iframe id="pdf-viewer" style="display:none"></iframe>
+            <div class="empty-placeholder" id="welcome-msg">码外人生，求真务实<br>开启深度阅读与思考</div>
+
+            <iframe id="pdf-viewer"></iframe>
+
+            <!-- 【重点检查】此处 ID 必须与脚本中的 mdWrapper 和 mdBody 对应 -->
+            <div id="md-wrapper">
+                <div id="md-content" class="markdown-body"></div>
+            </div>
+
             <div id="download-card">
-                <div class="download-icon">📖</div>
+                <div style="font-size:64px;margin-bottom:20px;">📖</div>
                 <h3 id="download-title"></h3>
-                <p style="color: #666; margin-bottom: 30px;">该书籍为 EPUB 格式，建议下载后使用本地阅读器打开</p>
-                <a href="#" id="actual-download-link" class="download-btn" download>立即下载书籍</a>
+                <p>EPUB 格式建议下载后阅读</p>
+                <a href="#" id="actual-download-link" class="download-btn" download>立即获取</a>
             </div>
         </div>
     </div>
@@ -357,73 +354,70 @@
         function setPanelVisible(visible) {
             const panel = document.getElementById('info-panel');
             const trigger = document.getElementById('floating-action-trigger');
-            if (visible) {
-                panel.style.display = 'block';
-                trigger.style.display = 'none';
-            } else {
-                panel.style.display = 'none';
-                if (document.getElementById('welcome-msg').style.display === 'none') {
-                    trigger.style.display = 'flex';
-                }
-            }
+            if (visible) { panel.style.display = 'block'; trigger.style.display = 'none'; }
+            else { panel.style.display = 'none'; if (document.getElementById('welcome-msg').style.display === 'none') trigger.style.display = 'flex'; }
         }
 
-        fetch('./books_data.json')
-            .then(res => res.json())
-            .then(data => {
-                const treeRoot = document.getElementById('book-tree');
-                treeRoot.innerHTML = '';
-                for (let category in data) {
-                    const catEl = document.createElement('div');
-                    // 【核心修改】默认加上 open 类名
-                    catEl.className = 'tree-category open';
-                    catEl.textContent = category;
-
-                    const listEl = document.createElement('ul');
-                    // 【核心修改】默认加上 open 类名
-                    listEl.className = 'tree-list open';
-
-                    data[category].forEach(item => {
-                        const li = document.createElement('li');
-                        li.className = 'tree-item';
-                        li.textContent = item.title;
-                        li.onclick = (e) => {
-                            e.stopPropagation();
-                            renderItem(category, item);
-                            if (!document.body.classList.contains('collapsed')) toggleSidebar();
-                        };
-                        listEl.appendChild(li);
-                    });
-
-                    catEl.onclick = () => {
-                        catEl.classList.toggle('open');
-                        listEl.classList.toggle('open');
+        fetch('./books_data.json').then(res => res.json()).then(data => {
+            const treeRoot = document.getElementById('book-tree');
+            treeRoot.innerHTML = '';
+            for (let category in data) {
+                const catEl = document.createElement('div');
+                catEl.className = 'tree-category open';
+                catEl.textContent = category;
+                const listEl = document.createElement('ul');
+                listEl.className = 'tree-list open';
+                data[category].forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'tree-item';
+                    li.textContent = item.title;
+                    li.onclick = (e) => {
+                        e.stopPropagation();
+                        renderItem(category, item);
+                        if (!document.body.classList.contains('collapsed')) toggleSidebar();
                     };
-
-                    treeRoot.appendChild(catEl);
-                    treeRoot.appendChild(listEl);
-                }
-            });
+                    listEl.appendChild(li);
+                });
+                catEl.onclick = () => { catEl.classList.toggle('open'); listEl.classList.toggle('open'); };
+                treeRoot.appendChild(catEl);
+                treeRoot.appendChild(listEl);
+            }
+        });
 
         function renderItem(category, item) {
             document.getElementById('welcome-msg').style.display = 'none';
+
+            // 1. 展示概要（此时 item.summary 已经是纯净的 txt 内容或默认文案）
             document.getElementById('item-title').textContent = item.title;
             document.getElementById('item-summary').textContent = item.summary;
             setPanelVisible(true);
 
-            const pdfViewer = document.getElementById('pdf-viewer');
-            const downloadCard = document.getElementById('download-card');
-            const bookUrl = `./books/${encodeURIComponent(category)}/${encodeURIComponent(item.fileName)}`;
+            const pdf = document.getElementById('pdf-viewer');
+            const mdWrap = document.getElementById('md-wrapper');
+            const mdBody = document.getElementById('md-content');
+            const dl = document.getElementById('download-card');
+            const url = `./books/${encodeURIComponent(category)}/${encodeURIComponent(item.fileName)}`;
 
-            if (item.fileName.toLowerCase().endsWith('.epub')) {
-                pdfViewer.style.display = 'none';
-                downloadCard.style.display = 'flex';
+            // 2. 切换正文显示
+            [pdf, mdWrap, dl].forEach(el => { if (el) el.style.display = 'none'; });
+
+            if (item.fileName.toLowerCase().endsWith('.md')) {
+                mdWrap.style.display = 'block';
+                fetch(url).then(r => r.text()).then(text => {
+                    if (window.marked) {
+                        mdBody.innerHTML = marked.parse(text);
+                    } else {
+                        mdBody.innerHTML = '<pre>' + text + '</pre>';
+                    }
+                    mdWrap.scrollTop = 0;
+                });
+            } else if (item.fileName.toLowerCase().endsWith('.epub')) {
+                dl.style.display = 'flex';
                 document.getElementById('download-title').textContent = item.title;
-                document.getElementById('actual-download-link').href = bookUrl;
+                document.getElementById('actual-download-link').href = url;
             } else {
-                downloadCard.style.display = 'none';
-                pdfViewer.style.display = 'block';
-                pdfViewer.src = bookUrl;
+                pdf.style.display = 'block';
+                pdf.src = url;
             }
         }
     </script>
