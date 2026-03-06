@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文双的个人空间 | Insight Hub</title>
+    <title>文双的博客 | Insight Hub</title>
     <style>
         :root {
             --sidebar-width: 280px;
             --accent: #F25A00;
             --sidebar-bg: #ffffff;
             --footer-bg: #f8f9fa;
-            --content-bg: #f2f2f2;
+            --content-bg: #ffffff;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -21,21 +21,22 @@
             height: 100vh;
             overflow: hidden;
             font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-            background: var(--content-bg);
+            background: #fff;
             color: #333;
         }
 
-        /* --- 侧边栏 --- */
+        /* --- 侧边栏布局 --- */
         #sidebar {
             width: var(--sidebar-width);
             height: 100%;
             background: var(--sidebar-bg);
-            border-right: 1px solid #ddd;
+            border-right: none;
             display: flex;
             flex-direction: column;
             transition: margin-left var(--transition);
             flex-shrink: 0;
             z-index: 30;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
         }
 
         body.collapsed #sidebar {
@@ -45,33 +46,33 @@
         #module-container {
             flex: 1;
             overflow-y: auto;
-            padding: 10px 15px;
+            padding: 20px 15px;
         }
 
         .module-label {
             font-size: 11px;
-            color: #999;
+            color: #bbb;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 20px 12px 10px;
+            padding: 10px 12px;
             font-weight: bold;
         }
 
         .sidebar-footer {
             height: 50px;
             background: var(--footer-bg);
-            border-top: 1px solid #eee;
+            border-top: 1px solid #f0f0f0;
             display: flex;
             align-items: center;
             padding: 0 15px;
             box-sizing: border-box;
-            color: #666;
+            color: #888;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 500;
             white-space: nowrap;
         }
 
-        /* --- 树形菜单 --- */
+        /* --- 树形菜单样式 --- */
         .tree-category {
             padding: 10px 12px;
             cursor: pointer;
@@ -92,6 +93,7 @@
             transition: 0.2s;
         }
 
+        /* 展开状态的旋转逻辑 */
         .tree-category.open::before {
             transform: rotate(90deg);
         }
@@ -121,24 +123,24 @@
             background: #fff5f0;
         }
 
-        /* --- 主视口 --- */
+        /* --- 主内容区 --- */
         #main-viewport {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #fff;
+            background: var(--content-bg);
             min-width: 0;
             position: relative;
         }
 
-        /* --- Tooltip --- */
+        /* --- Tooltip 样式 --- */
         [data-tooltip]::after {
             content: attr(data-tooltip);
             position: absolute;
             background: #333;
             color: #fff;
             font-size: 11px;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
             white-space: nowrap;
             opacity: 0;
@@ -161,13 +163,13 @@
             width: 32px;
             height: 32px;
             background: #fff;
-            border: 1px solid #ddd;
+            border: 1px solid #eee;
             border-radius: 4px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         #toggle-btn svg {
@@ -178,11 +180,16 @@
             transform: rotate(180deg);
         }
 
-        /* 详情面板 (概要) */
+        #toggle-btn::after {
+            bottom: 42px;
+            left: 0;
+        }
+
+        /* 详情面板 (摘要) */
         #info-panel {
             padding: 20px 40px 20px 60px;
             background: #fffaf8;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f0f0f0;
             position: relative;
             display: none;
         }
@@ -198,6 +205,11 @@
             border: 1px solid #eee;
             border-radius: 20px;
             background: #fff;
+        }
+
+        .close-panel-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
         }
 
         .summary-content {
@@ -219,7 +231,6 @@
             flex-direction: column;
         }
 
-        /* EPUB 下载卡片样式 */
         #download-card {
             display: none;
             flex-direction: column;
@@ -251,12 +262,6 @@
             transform: translateY(-2px);
         }
 
-        .download-tip {
-            margin-top: 15px;
-            color: #999;
-            font-size: 12px;
-        }
-
         #floating-action-trigger {
             position: absolute;
             right: 25px;
@@ -270,16 +275,22 @@
             display: none;
             align-items: center;
             justify-content: center;
-            border: 1px solid #ddd;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border: 1px solid #eee;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             font-size: 20px;
+        }
+
+        #floating-action-trigger::after {
+            content: "查看概要";
+            bottom: 55px;
+            right: 0;
         }
 
         iframe {
             flex: 1;
             width: 100%;
             border: none;
-            background: #525659;
+            background: #fff;
         }
 
         .empty-placeholder {
@@ -287,25 +298,29 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: #999;
+            color: #bbb;
             font-style: italic;
             text-align: center;
+            line-height: 1.8;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- 侧边栏 -->
     <div id="sidebar">
         <div id="module-container">
-            <div class="module-label">Assets / 书籍</div>
-            <div id="book-tree">正在同步索引...</div>
+            <div class="module-label">Library / 书籍</div>
+            <div id="book-tree"></div>
         </div>
+
         <div class="sidebar-footer">
             <span style="margin-left: 35px;">文双的博客</span>
         </div>
     </div>
 
+    <!-- 切换按钮 -->
     <button id="toggle-btn" onclick="toggleSidebar()" data-tooltip="收起菜单">
         <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
             <path
@@ -315,26 +330,20 @@
 
     <div id="main-viewport">
         <div id="info-panel">
-            <div class="close-panel-btn" onclick="setPanelVisible(false)">关闭摘要</div>
+            <div class="close-panel-btn" onclick="setPanelVisible(false)">关闭</div>
             <h2 id="item-title" style="margin:0; font-size: 1.1rem; color: #000;"></h2>
             <div class="summary-content" id="item-summary"></div>
         </div>
 
         <div id="render-container">
             <div id="floating-action-trigger" onclick="setPanelVisible(true)" data-tooltip="查看详情">💡</div>
-
-            <div class="empty-placeholder" id="welcome-msg">点按左下角图标<br>开启深度阅读与思考</div>
-
-            <!-- PDF 阅读器 -->
+            <div class="empty-placeholder" id="welcome-msg">开启深度阅读与思考</div>
             <iframe id="pdf-viewer" style="display:none"></iframe>
-
-            <!-- EPUB 下载界面 -->
             <div id="download-card">
                 <div class="download-icon">📖</div>
                 <h3 id="download-title"></h3>
                 <p style="color: #666; margin-bottom: 30px;">该书籍为 EPUB 格式，建议下载后使用本地阅读器打开</p>
                 <a href="#" id="actual-download-link" class="download-btn" download>立即下载书籍</a>
-                <div class="download-tip">Tip: 手机用户推荐使用“微信读书”或“iBooks”打开</div>
             </div>
         </div>
     </div>
@@ -353,7 +362,6 @@
                 trigger.style.display = 'none';
             } else {
                 panel.style.display = 'none';
-                // 只有当已经选了东西，才显示灯泡
                 if (document.getElementById('welcome-msg').style.display === 'none') {
                     trigger.style.display = 'flex';
                 }
@@ -367,10 +375,14 @@
                 treeRoot.innerHTML = '';
                 for (let category in data) {
                     const catEl = document.createElement('div');
-                    catEl.className = 'tree-category';
+                    // 【核心修改】默认加上 open 类名
+                    catEl.className = 'tree-category open';
                     catEl.textContent = category;
+
                     const listEl = document.createElement('ul');
-                    listEl.className = 'tree-list';
+                    // 【核心修改】默认加上 open 类名
+                    listEl.className = 'tree-list open';
+
                     data[category].forEach(item => {
                         const li = document.createElement('li');
                         li.className = 'tree-item';
@@ -382,7 +394,12 @@
                         };
                         listEl.appendChild(li);
                     });
-                    catEl.onclick = () => { catEl.classList.toggle('open'); listEl.classList.toggle('open'); };
+
+                    catEl.onclick = () => {
+                        catEl.classList.toggle('open');
+                        listEl.classList.toggle('open');
+                    };
+
                     treeRoot.appendChild(catEl);
                     treeRoot.appendChild(listEl);
                 }
@@ -399,13 +416,11 @@
             const bookUrl = `./books/${encodeURIComponent(category)}/${encodeURIComponent(item.fileName)}`;
 
             if (item.fileName.toLowerCase().endsWith('.epub')) {
-                // 处理 EPUB：隐藏阅读器，显示下载卡片
                 pdfViewer.style.display = 'none';
                 downloadCard.style.display = 'flex';
                 document.getElementById('download-title').textContent = item.title;
                 document.getElementById('actual-download-link').href = bookUrl;
             } else {
-                // 处理 PDF：显示阅读器，隐藏下载卡片
                 downloadCard.style.display = 'none';
                 pdfViewer.style.display = 'block';
                 pdfViewer.src = bookUrl;
