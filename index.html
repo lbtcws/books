@@ -1,92 +1,95 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>feZsy's Library</title>
+    <title>私藏书架 - feZsy</title>
     <style>
-        :root {
-            --bg: #ffffff;
-            --text: #333;
-            --accent: #F25A00;
-        }
+        :root { --sidebar-width: 280px; --text-main: #333; --accent: #F25A00; }
+        body { margin: 0; display: flex; font-family: -apple-system, system-ui, sans-serif; color: var(--text-main); background: #f9f9f9; height: 100vh; overflow: hidden; }
+        
+        /* 左侧菜单 */
+        #sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid #eee; padding: 20px; overflow-y: auto; flex-shrink: 0; }
+        h2 { font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--text-main); padding-bottom: 8px; }
+        
+        /* 树形结构 */
+        .category { font-weight: bold; cursor: pointer; padding: 8px 0; display: block; user-select: none; }
+        .category::before { content: "▶"; display: inline-block; margin-right: 8px; font-size: 10px; transition: transform 0.2s; }
+        .category.open::before { transform: rotate(90deg); }
+        .book-list { list-style: none; padding-left: 20px; margin: 0; display: none; }
+        .book-list.open { display: block; }
+        .book-item { padding: 6px 0; font-size: 14px; font-weight: normal; cursor: pointer; color: #666; transition: color 0.2s; }
+        .book-item:hover { color: var(--accent); }
 
-        body {
-            font-family: -apple-system, "PingFang SC", sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            line-height: 1.6;
-        }
+        /* 右侧内容区 */
+        #content { flex-grow: 1; background: #fff; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-style: italic; }
 
-        h1 {
-            font-size: 24px;
-            border-bottom: 2px solid var(--text);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-
-        .quote {
-            font-style: italic;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .book-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .book-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            display: block;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.2s;
-        }
-
-        .book-item:hover {
-            border-color: var(--accent);
-            background: #fffaf8;
-            transform: translateY(-2px);
-        }
-
-        .book-title {
-            font-weight: bold;
-            display: block;
-        }
-
-        .book-meta {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: 30vh; border-right: none; border-bottom: 1px solid #eee; }
         }
     </style>
 </head>
-
 <body>
-    <h1>📚 feZsy 的数字资产库</h1>
-    <div class="quote">“做正确的事，把事做正确。” —— 读《段永平投资问答录》感</div>
 
-    <div class="book-list">
-        <!-- 以后每加一本书，就复制下面这个 <a> 标签 -->
-        <a href="./books/段永平投资问答录.pdf" class="book-item">
-            <span class="book-title">段永平投资问答录 (投资逻辑篇)</span>
-            <span class="book-meta">财经 / PDF / 重点推荐</span>
-        </a>
+<div id="sidebar">
+    <h2>我的资产库</h2>
+    <div id="tree-container">加载中...</div>
+</div>
 
-        <!-- 占位示例 -->
-        <div class="book-item" style="opacity: 0.5;">
-            <span class="book-title">更多书籍录入中...</span>
-        </div>
-    </div>
+<div id="content">
+    <div class="empty-state" id="placeholder">请从左侧选择书籍阅读</div>
+    <iframe id="reader" src="" style="display: none;"></iframe>
+</div>
+
+<script>
+    // 获取数据并渲染
+    fetch('./books_data.json')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('tree-container');
+            container.innerHTML = '';
+            
+            for (let category in data) {
+                // 创建分类
+                const catDiv = document.createElement('div');
+                catDiv.className = 'category';
+                catDiv.innerText = category;
+                
+                // 创建书籍列表
+                const ul = document.createElement('ul');
+                ul.className = 'book-list';
+                
+                data[category].forEach(book => {
+                    const li = document.createElement('li');
+                    li.className = 'book-item';
+                    li.innerText = book.replace(/\.[^/.]+$/, ""); // 去掉后缀显示
+                    li.onclick = (e) => {
+                        e.stopPropagation();
+                        loadBook(`./books/${category}/${book}`);
+                    };
+                    ul.appendChild(li);
+                });
+                
+                // 折叠逻辑
+                catDiv.onclick = () => {
+                    catDiv.classList.toggle('open');
+                    ul.classList.toggle('open');
+                };
+                
+                container.appendChild(catDiv);
+                container.appendChild(ul);
+            }
+        });
+
+    function loadBook(path) {
+        document.getElementById('placeholder').style.display = 'none';
+        const reader = document.getElementById('reader');
+        reader.src = path;
+        reader.style.display = 'block';
+    }
+</script>
 </body>
-
 </html>
