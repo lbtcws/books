@@ -15,6 +15,13 @@
     <!-- Local CSS -->
     <link rel="stylesheet" href="./lib/github-markdown.min.css">
     <script src="./lib/marked.min.js"></script>
+    
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configure PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 
     <style>
         :root {
@@ -169,8 +176,9 @@
             position: relative;
         }
 
-        body.collapsed #sidebar {
-            margin-left: calc(var(--sidebar-width) * -1);
+        body.fullscreen #render-container {
+            padding: 0;
+            height: 100vh;
         }
 
         .sidebar-header {
@@ -338,34 +346,7 @@
             overflow: hidden;
         }
 
-        /* Toggle Button */
-        #toggle-btn {
-            position: fixed;
-            bottom: 24px;
-            left: 24px;
-            z-index: 100;
-            width: 48px;
-            height: 48px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-lg), var(--glow);
-            transition: var(--transition-fast);
-            color: white;
-        }
 
-        #toggle-btn:hover {
-            transform: scale(1.1);
-            box-shadow: var(--shadow-xl), 0 0 30px rgba(99, 102, 241, 0.5);
-        }
-
-        body.collapsed #toggle-btn svg {
-            transform: rotate(180deg);
-        }
 
         /* Info Panel */
         #info-panel {
@@ -429,6 +410,61 @@
             flex-direction: column;
             overflow: hidden;
             padding: 30px;
+        }
+
+        /* PDF Viewer - enable scrolling */
+        iframe.pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--bg-secondary);
+            display: none;
+            border-radius: 0;
+        }
+
+        /* PDF.js Viewer - Continuous Scroll */
+        #pdfjs-container {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: none;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #pdfjs-container .pdf-page {
+            margin: 0 auto 20px auto;
+            display: block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            max-width: 100%;
+        }
+
+        #pdfjs-container canvas {
+            display: block;
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        /* Fullscreen PDF adjustments */
+        body.fullscreen #pdfjs-container {
+            border-radius: 0;
+            padding: 0;
+            max-width: 100vw;
+        }
+
+        body.fullscreen #pdfjs-container .pdf-page {
+            max-width: 100vw;
+            width: 100%;
+        }
+
+        body.fullscreen #pdfjs-container canvas {
+            max-width: 100vw;
+            width: 100% !important;
+            height: auto !important;
         }
 
         /* Welcome Screen */
@@ -508,16 +544,6 @@
             font-size: 0.85rem;
             color: var(--text-muted);
             line-height: 1.5;
-        }
-
-        /* PDF Viewer */
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 12px;
-            background: var(--bg-secondary);
-            display: none;
         }
 
         /* Markdown Content */
@@ -660,40 +686,110 @@
             transform: scale(1.1);
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            :root {
-                --sidebar-width: 280px;
-            }
-            
-            .feature-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
+        /* Responsive - Mobile First */
         @media (max-width: 768px) {
             :root {
-                --sidebar-width: 260px;
+                --sidebar-width: 280px;
+                --header-height: 60px;
             }
             
             header {
-                padding: 0 20px;
+                padding: 0 15px;
             }
             
             .header-stats {
                 display: none;
             }
             
+            .logo span:last-child {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+            }
+            
+            #toggle-btn {
+                bottom: 16px;
+                left: 16px;
+                width: 44px;
+                height: 44px;
+            }
+            
             .welcome-title {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
+            }
+            
+            .welcome-subtitle {
+                font-size: 0.95rem;
+                max-width: 100%;
+                padding: 0 20px;
             }
             
             .feature-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 0 20px;
+            }
+            
+            .feature-card {
+                padding: 20px;
             }
             
             #render-container {
+                padding: 15px;
+            }
+            
+            #info-panel {
+                padding: 15px 20px;
+            }
+            
+            .panel-title {
+                font-size: 1.2rem;
+            }
+            
+            .summary-content {
+                font-size: 0.9rem;
+            }
+            
+            #md-wrapper {
                 padding: 20px;
+            }
+            
+            .markdown-body {
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title {
+                font-size: 1.3rem;
+            }
+            
+            .welcome-icon {
+                font-size: 3rem;
+            }
+            
+            .feature-icon {
+                font-size: 2rem;
+            }
+            
+            .feature-title {
+                font-size: 0.95rem;
+            }
+            
+            .feature-desc {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            :root {
+                --sidebar-width: 260px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -711,6 +807,36 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Fullscreen Reading Mode */
+        body.fullscreen #sidebar,
+        body.fullscreen header {
+            display: none;
+        }
+
+        body.fullscreen .app-container {
+            margin-top: 0;
+        }
+
+        body.fullscreen #main-viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        body.fullscreen #render-container {
+            padding: 0;
+            height: 100vh;
+        }
+
+        body.fullscreen iframe,
+        body.fullscreen #md-wrapper {
+            border-radius: 0;
+        }
+
     </style>
 </head>
 
@@ -746,12 +872,6 @@
             <div id="module-container"></div>
         </div>
 
-        <!-- Toggle Button -->
-        <button id="toggle-btn" onclick="toggleSidebar()" data-tooltip="收起菜单">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 18l-6-6 6-6"/>
-            </svg>
-        </button>
 
         <!-- Main Viewport -->
         <div id="main-viewport">
@@ -792,6 +912,9 @@
 
                 <!-- PDF Viewer -->
                 <iframe id="pdf-viewer"></iframe>
+                
+                <!-- PDF.js Viewer (for continuous scroll) -->
+                <div id="pdfjs-container"></div>
 
                 <!-- Markdown Viewer -->
                 <div id="md-wrapper">
@@ -815,16 +938,126 @@
         </div>
     </div>
 
+    <!-- Fullscreen Reading Button (fixed to viewport, outside all containers) -->
+    <div id="fullscreen-reading-btn" onmousedown="startDrag(event)" ontouchstart="startDrag(event)" onclick="handleFullscreenClick(event)" data-tooltip="全屏阅读" style="display: none; position: fixed; right: 30px; bottom: 30px; z-index: 90; width: 56px; height: 56px; background: var(--accent-gradient); border-radius: 50%; align-items: center; justify-content: center; cursor: grab; box-shadow: var(--shadow-lg), var(--glow); transition: var(--transition-fast); user-select: none;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+    </div>
+</body>
     <script>
         // State
         let allBooks = [];
         let totalBooks = 0;
+        let currentBook = null;
+        let isFullscreen = false;
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let dragElement = null;
 
-        // Toggle Sidebar
-        function toggleSidebar() {
-            const isCollapsed = document.body.classList.toggle('collapsed');
-            const btn = document.getElementById('toggle-btn');
-            btn.setAttribute('data-tooltip', isCollapsed ? '展开菜单' : '收起菜单');
+        // Drag functionality for fullscreen button
+        function startDrag(e) {
+            e.preventDefault();
+            isDragging = false;
+            dragElement = document.getElementById('fullscreen-reading-btn');
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            const rect = dragElement.getBoundingClientRect();
+            dragOffsetX = clientX - rect.left;
+            dragOffsetY = clientY - rect.top;
+            dragElement.style.cursor = 'grabbing';
+            dragElement.style.transition = 'none';
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function onDrag(e) {
+            if (!dragElement) return;
+            e.preventDefault();
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            const newX = clientX - dragOffsetX;
+            const newY = clientY - dragOffsetY;
+            
+            dragElement.style.right = 'auto';
+            dragElement.style.bottom = 'auto';
+            dragElement.style.left = newX + 'px';
+            dragElement.style.top = newY + 'px';
+            isDragging = true;
+        }
+
+        function endDrag() {
+            if (dragElement) {
+                dragElement.style.cursor = 'grab';
+                dragElement.style.transition = 'var(--transition-fast)';
+            }
+            dragElement = null;
+            isDragging = false; // Reset dragging flag
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('touchend', endDrag);
+        }
+
+        function handleFullscreenClick(e) {
+            if (isDragging) {
+                e.preventDefault();
+                e.stopPropagation();
+                isDragging = false; // Reset after handling
+            } else {
+                toggleFullscreen();
+            }
+        }
+
+        // Toggle Fullscreen Reading Mode
+        function toggleFullscreen() {
+            if (isFullscreen) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+        }
+
+        // Enter Fullscreen Reading Mode (CSS-only, button always visible)
+        function enterFullscreen() {
+            isFullscreen = true;
+            document.body.classList.add('fullscreen');
+            // Update button to exit fullscreen (compress icon - arrows pointing inward)
+            const btn = document.getElementById('fullscreen-reading-btn');
+            btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>`;
+            btn.setAttribute('data-tooltip', '退出全屏');
+        }
+
+        // Exit Fullscreen Reading Mode
+        function exitFullscreen() {
+            isFullscreen = false;
+            document.body.classList.remove('fullscreen');
+            // Update button to enter fullscreen (expand icon - arrows pointing outward)
+            const btn = document.getElementById('fullscreen-reading-btn');
+            btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>`;
+            btn.setAttribute('data-tooltip', '全屏阅读');
+            // Reset button position to default
+            btn.style.left = '';
+            btn.style.top = '';
+            btn.style.right = '30px';
+            btn.style.bottom = '30px';
         }
 
         // Panel Visibility
@@ -929,11 +1162,6 @@
                     
                     // Render item
                     renderItem(category, data[category][index]);
-                    
-                    // Auto-collapse on mobile
-                    if (window.innerWidth < 768 && !document.body.classList.contains('collapsed')) {
-                        toggleSidebar();
-                    }
                 });
             });
         }
@@ -946,6 +1174,7 @@
 
         // Render Item
         function renderItem(category, item) {
+            currentBook = item;
             document.getElementById('welcome-msg').style.display = 'none';
 
             // Update panel
@@ -958,6 +1187,34 @@
             const mdWrap = document.getElementById('md-wrapper');
             const dl = document.getElementById('download-card');
             [pdf, mdWrap, dl].forEach(el => el.style.display = 'none');
+
+            // Show fullscreen button for PDF and Markdown (always visible when content is loaded)
+            const fullscreenBtn = document.getElementById('fullscreen-reading-btn');
+            if (item.fileName.toLowerCase().endsWith('.md') || item.fileName.toLowerCase().endsWith('.pdf')) {
+                fullscreenBtn.style.display = 'flex';
+                // Reset button state when switching books
+                if (isFullscreen) {
+                    // Show compress icon (exit fullscreen)
+                    fullscreenBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>`;
+                    fullscreenBtn.setAttribute('data-tooltip', '退出全屏');
+                } else {
+                    // Show expand icon (enter fullscreen)
+                    fullscreenBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>`;
+                    fullscreenBtn.setAttribute('data-tooltip', '全屏阅读');
+                }
+            } else {
+                fullscreenBtn.style.display = 'none';
+            }
 
             const url = `./books/${encodeURIComponent(category)}/${encodeURIComponent(item.fileName)}`;
 
@@ -981,8 +1238,17 @@
                 dl.style.display = 'flex';
                 document.getElementById('download-title').textContent = item.title;
                 document.getElementById('actual-download-link').href = url;
+            } else if (item.fileName.toLowerCase().endsWith('.pdf')) {
+                // Use PDF.js for PDF files
+                const pdfjsContainer = document.getElementById('pdfjs-container');
+                pdfjsContainer.style.display = 'block';
+                pdfjsContainer.innerHTML = '<div style="text-align:center;padding:40px;"><span class="loading"></span></div>';
+                pdf.style.display = 'none';
+                loadPDFWithPDFjs(url);
             } else {
+                // Fallback to iframe for other formats
                 pdf.style.display = 'block';
+                pdf.classList.add('pdf-viewer');
                 pdf.src = url;
             }
         }
@@ -999,6 +1265,49 @@
                 document.getElementById('module-container').innerHTML = 
                     '<p style="color:var(--text-muted);text-align:center;padding:20px;">加载失败，请刷新页面重试</p>';
             });
+        
+        // Load PDF with PDF.js for continuous scroll
+        async function loadPDFWithPDFjs(url) {
+            const container = document.getElementById('pdfjs-container');
+            
+            try {
+                // Load PDF document
+                const loadingTask = pdfjsLib.getDocument(url);
+                const pdf = await loadingTask.promise;
+                
+                // Clear loading indicator
+                container.innerHTML = '';
+                
+                // Render all pages
+                const scale = 1.5;
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale });
+                    
+                    // Create page container
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'pdf-page';
+                    
+                    // Create canvas
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    pageDiv.appendChild(canvas);
+                    container.appendChild(pageDiv);
+                    
+                    // Render page
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                }
+            } catch (err) {
+                console.error('PDF.js load error:', err);
+                container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">PDF 加载失败</p>';
+            }
+        }
     </script>
 </body>
 
