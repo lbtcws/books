@@ -10,6 +10,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl
 
 const props = defineProps({
   book: { type: Object, required: true },
+  isFullscreen: { type: Boolean, default: false },
+  onToggleFullscreen: { type: Function, default: () => {} },
 })
 
 const progress = useProgressStore()
@@ -171,6 +173,8 @@ function onKeydown(e) {
 
 watch(() => props.book.id, loadPdf)
 
+defineExpose({ zoomIn, zoomOut, resetZoom, prev, next, goPage, pageNum, pageCount, scale })
+
 onMounted(() => {
   loadPdf()
   window.addEventListener('keydown', onKeydown)
@@ -194,42 +198,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex h-full flex-col bg-slate-100">
-    <!-- 工具栏 -->
-    <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
-      <el-button-group>
-        <el-button :icon="ArrowLeft" :disabled="pageNum <= 1" @click="prev">上一页</el-button>
-        <el-button :icon="ArrowRight" :disabled="pageNum >= pageCount" @click="next">下一页</el-button>
-      </el-button-group>
-
-      <div class="flex items-center gap-1 text-sm text-slate-600">
-        <el-input-number
-          v-model="pageNum"
-          :min="1"
-          :max="pageCount || 1"
-          :controls="false"
-          size="small"
-          class="!w-20"
-          @change="goPage"
-        />
-        <span>/ {{ pageCount }}</span>
-      </div>
-
-      <div class="flex-1" />
-
-      <div class="flex items-center gap-1 text-sm text-slate-600">
-        <el-button :icon="ZoomOut" circle size="small" @click="zoomOut" />
-        <button
-          class="w-14 select-none text-center text-xs text-slate-500 hover:text-indigo-600"
-          title="重置缩放"
-          @click="resetZoom"
-        >
-          {{ zoomPercent }}%
-        </button>
-        <el-button :icon="ZoomIn" circle size="small" @click="zoomIn" />
-        <el-button :icon="RefreshLeft" circle size="small" title="重置缩放" @click="resetZoom" />
-      </div>
-    </div>
-
     <!-- 内容区 -->
     <div ref="scrollRef" class="min-h-0 flex-1 overflow-auto">
       <div v-if="loading" class="flex h-full items-center justify-center">

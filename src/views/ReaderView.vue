@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { FullScreen } from '@element-plus/icons-vue'
+import { FullScreen, ZoomIn, ZoomOut, RefreshLeft, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import { useBooksStore } from '../stores/books'
 import PdfViewer from '../components/PdfViewer.vue'
 import MarkdownViewer from '../components/MarkdownViewer.vue'
@@ -32,6 +32,7 @@ const fileUrl = computed(() => {
 // 全屏功能
 const isFullscreen = ref(false)
 const containerRef = ref(null)
+const pdfViewerRef = ref(null)
 
 function toggleFullscreen() {
   if (!containerRef.value) return
@@ -46,6 +47,16 @@ function onFullscreenChange() {
   isFullscreen.value = !!document.fullscreenElement
 }
 
+function pdfZoomIn() {
+  pdfViewerRef.value?.zoomIn()
+}
+function pdfZoomOut() {
+  pdfViewerRef.value?.zoomOut()
+}
+function pdfResetZoom() {
+  pdfViewerRef.value?.resetZoom()
+}
+
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
 })
@@ -57,13 +68,48 @@ onBeforeUnmount(() => {
 
 <template>
   <div v-if="book" ref="containerRef" class="flex h-[calc(100vh-3.5rem)] flex-col">
-    <!-- 标题栏 -->
-    <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5">
-      <div class="flex items-center gap-3">
-        <h2 class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">
-          {{ book.title }}
-          <span class="ml-2 font-normal text-slate-400">{{ book.author }}</span>
-        </h2>
+    <!-- 统一标题栏（所有文档类型共用） -->
+    <div class="shrink-0 flex items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
+      <!-- 左侧：翻页（仅 PDF） -->
+      <template v-if="readerType === 'pdf'">
+        <el-button-group>
+          <el-button :icon="ArrowLeft" :disabled="pdfViewerRef?.pageNum <= 1" @click="pdfViewerRef?.prev()">上一页</el-button>
+          <el-button :icon="ArrowRight" :disabled="pdfViewerRef?.pageNum >= pdfViewerRef?.pageCount" @click="pdfViewerRef?.next()">下一页</el-button>
+        </el-button-group>
+        <div class="flex items-center gap-1 text-sm text-slate-600">
+          <el-input-number
+            :model-value="pdfViewerRef?.pageNum"
+            :min="1"
+            :max="pdfViewerRef?.pageCount || 1"
+            :controls="false"
+            size="small"
+            class="!w-20"
+            @change="(v) => pdfViewerRef?.goPage(v)"
+          />
+          <span>/ {{ pdfViewerRef?.pageCount || 0 }}</span>
+        </div>
+      </template>
+
+      <!-- 中间：标题 + 作者 -->
+      <h2 class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 px-2">
+        {{ book.title }}
+        <span class="ml-2 font-normal text-slate-400">{{ book.author }}</span>
+      </h2>
+
+      <!-- 右侧：缩放 + 全屏 -->
+      <div class="flex items-center gap-1 text-sm text-slate-600">
+        <template v-if="readerType === 'pdf'">
+          <el-button :icon="ZoomOut" circle size="small" @click="pdfZoomOut" />
+          <button
+            class="w-14 select-none text-center text-xs text-slate-500 hover:text-indigo-600"
+            title="重置缩放"
+            @click="pdfResetZoom"
+          >
+            {{ pdfViewerRef ? Math.round(pdfViewerRef.scale * 100) : 120 }}%
+          </button>
+          <el-button :icon="ZoomIn" circle size="small" @click="pdfZoomIn" />
+          <el-button :icon="RefreshLeft" circle size="small" title="重置缩放" @click="pdfResetZoom" />
+        </template>
         <el-button :icon="FullScreen" circle size="small" :title="isFullscreen ? '退出全屏' : '全屏'" @click="toggleFullscreen" />
       </div>
     </div>
@@ -71,7 +117,7 @@ onBeforeUnmount(() => {
     <!-- 内容区 -->
     <div class="min-h-0 flex-1">
       <!-- PDF 阅读器 -->
-      <PdfViewer v-if="readerType === 'pdf'" :book="book" />
+      <PdfViewer v-if="readerType === 'pdf'" ref="pdfViewerRef" :book="book" />
 
       <!-- Markdown 阅读器 -->
       <MarkdownViewer v-else-if="readerType === 'markdown'" :book="book" :file-url="fileUrl" />
