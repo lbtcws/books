@@ -400,12 +400,17 @@ def process_books():
         if books:
             result[category] = books
     
-    # Output JSON
+    # Output JSON to books_metadata.json
     output_path = os.path.join(os.path.dirname(__file__), "books_metadata.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
+        
+    # Output JSON to books_data.json as well
+    data_path = os.path.join(os.path.dirname(__file__), "books_data.json")
+    with open(data_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
     
-    print(f"Generated {output_path}")
+    print(f"Generated {output_path} and {data_path}")
     print(f"Total categories: {len(result)}")
     print(f"Total books: {sum(len(v) for v in result.values())}")
 

@@ -109,7 +109,12 @@ function openBook(book) {
         </div>
 
         <!-- 特性卡片 -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+            <div class="mb-3 text-4xl">📖</div>
+            <h3 class="mb-2 font-semibold text-slate-800">经典小说</h3>
+            <p class="text-sm text-slate-500">中外文学名著与热门小说</p>
+          </div>
           <div class="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <div class="mb-3 text-4xl">📊</div>
             <h3 class="mb-2 font-semibold text-slate-800">投资理财</h3>

@@ -533,14 +533,6 @@
       "summary": "达莱尔·哈夫用通俗语言揭示统计学中的常见误导与陷阱。"
     },
     {
-      "id": "book-d66fc004",
-      "title": "金字塔原理",
-      "author": "",
-      "year": null,
-      "fileName": "金字塔原理【linbaoshuwu.com】 (1).epub",
-      "summary": "芭芭拉·明托提出的结构化思考与表达的经典方法论。"
-    },
-    {
       "id": "book-131897ac",
       "title": "金字塔原理",
       "author": "",
@@ -631,14 +623,6 @@
       "summary": "索罗斯的反身性理论与其金融市场实践的思考记录。"
     },
     {
-      "id": "book-504bd2c4",
-      "title": "国富论——国民财富的性质和原因",
-      "author": "亚当·斯密",
-      "year": null,
-      "fileName": "亚当·斯密：国富论——国民财富的性质和原因 (1).txt",
-      "summary": "亚当·斯密经济学奠基之作，探讨国民财富的性质与原因。"
-    },
-    {
       "id": "book-9fea28fd",
       "title": "国富论——国民财富的性质和原因",
       "author": "亚当·斯密",
@@ -653,14 +637,6 @@
       "year": null,
       "fileName": "兹维·博迪 & 罗伯特·莫顿：金融学 (扫描版).pdf",
       "summary": "博迪与莫顿合著的经典金融学教材，覆盖金融体系核心理论。"
-    },
-    {
-      "id": "book-fbf2276d",
-      "title": "就业、利息和货币通论",
-      "author": "凯恩斯",
-      "year": null,
-      "fileName": "凯恩斯：就业、利息和货币通论 (1).pdf",
-      "summary": "凯恩斯革命性著作，奠定现代宏观经济学的基础。"
     },
     {
       "id": "book-dbf5fb45",
@@ -727,14 +703,6 @@
       "summary": "高斯与温伯格探讨如何发现与定义真正问题的经典小书。"
     },
     {
-      "id": "book-b6e72101",
-      "title": "国富论",
-      "author": "",
-      "year": null,
-      "fileName": "国富论.md",
-      "summary": "亚当·斯密经济学奠基之作，探讨国民财富的性质与原因。"
-    },
-    {
       "id": "book-9feaec82",
       "title": "宏观经济学",
       "author": "多恩布什 & 费希尔 & 斯塔兹",
@@ -767,15 +735,15 @@
       "summary": "清崎通过两个父亲的对比讲述财商教育与财富思维。"
     },
     {
-      "id": "natural-value",
-      "title": "Natural Value",
-      "author": "弗里德里希·冯·维塞尔",
+      "id": "book-29bdb578",
+      "title": "巴菲特的护城河",
+      "author": "",
       "year": null,
-      "fileName": "弗里德里希·冯·维塞尔：Natural Value (1).pdf",
-      "summary": "维塞尔的自然价值理论，奥地利学派的重要经济学著作。"
+      "fileName": "巴菲特的护城河.pdf",
+      "summary": "《巴菲特的护城河》是一部值得阅读的作品，为读者提供独特的视角与思考。"
     },
     {
-      "id": "natural-value-2",
+      "id": "natural-value",
       "title": "Natural Value",
       "author": "弗里德里希·冯·维塞尔",
       "year": null,
@@ -919,14 +887,6 @@
       "summary": "段永平关于投资、企业与人生的问答与思考记录。"
     },
     {
-      "id": "book-94a3e0e3",
-      "title": "段永平投资问答录",
-      "author": "",
-      "year": null,
-      "fileName": "段永平投资问答录.txt",
-      "summary": "段永平关于投资、企业与人生的问答与思考记录。"
-    },
-    {
       "id": "book-6316226b",
       "title": "海龟交易法则",
       "author": "",
@@ -972,14 +932,6 @@
       "author": "",
       "year": null,
       "fileName": "穷查理年鉴.epub",
-      "summary": "芒格每年的智慧语录与思考精华汇编。"
-    },
-    {
-      "id": "book-c08812f7",
-      "title": "穷查理年鉴",
-      "author": "",
-      "year": null,
-      "fileName": "穷查理年鉴.txt",
       "summary": "芒格每年的智慧语录与思考精华汇编。"
     },
     {
@@ -1037,14 +989,6 @@
       "year": null,
       "fileName": "股市长线法宝（原书第5版）.md",
       "summary": "西格尔研究股票长期回报与投资策略的历史数据著作。"
-    },
-    {
-      "id": "book-d3a64768",
-      "title": "股票作手回忆录",
-      "author": "",
-      "year": null,
-      "fileName": "股票作手回忆录.md",
-      "summary": "李费佛笔下的利弗莫尔，投机交易领域的经典之作。"
     },
     {
       "id": "book-ed3a1542",
@@ -1125,14 +1069,6 @@
       "year": null,
       "fileName": "金融学从入门到精通.md",
       "summary": "系统介绍金融学基础知识与实用投资方法。"
-    },
-    {
-      "id": "book-5b23545b",
-      "title": "金融炼金术",
-      "author": "",
-      "year": null,
-      "fileName": "金融炼金术.md",
-      "summary": "索罗斯的反身性理论与其金融市场实践的思考记录。"
     },
     {
       "id": "book-8ec47ce5",
