@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+backend
+public/books
+*.md
+*.backup
+*.mjs
+*.py
+books_data.json
+books_metadata.json

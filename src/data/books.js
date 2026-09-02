@@ -15,6 +15,14 @@ const categoryIcons = {
   '小说': '📖',
 }
 
+// 分类 → 默认标签（书籍自身 tags 优先）
+const categoryTags = {
+  '巴菲特信': ['投资', '巴菲特', '股东信'],
+  '财经': ['财经', '商业'],
+  '认知': ['认知', '成长'],
+  '小说': ['文学', '小说'],
+}
+
 // 转换数据格式
 export const books = Object.entries(booksData).flatMap(([category, items]) =>
   items.map((item) => ({
@@ -23,6 +31,8 @@ export const books = Object.entries(booksData).flatMap(([category, items]) =>
     author: item.author || '未知作者',
     year: item.year || new Date().getFullYear(),
     category,
+    format: (item.fileName || '').toLowerCase().split('.').pop(),
+    tags: item.tags || categoryTags[category] || [],
     description: item.summary || '',
     file: item.fileName,
     summary: item.summary || '',
@@ -34,4 +44,4 @@ export const books = Object.entries(booksData).flatMap(([category, items]) =>
 
 // 按分类组织的原始数据（供侧边栏使用）
 export const booksByCategory = booksData
-export { categoryIcons }
+export { categoryIcons, categoryTags }

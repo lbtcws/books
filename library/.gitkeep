@@ -1,0 +1,2 @@
+# AI Mode 文档摄取目录：放入 EPUB / PDF / Markdown / TXT，
+# 通过 POST /api/documents/upload 或批量脚本入库向量库。

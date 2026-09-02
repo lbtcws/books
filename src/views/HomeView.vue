@@ -16,15 +16,17 @@ const expandedCategories = ref(Object.keys(store.byCategory).reduce((acc, cat) =
   return acc
 }, {}))
 
-// 过滤后的书籍
+// 过滤后的书籍（标题 / 作者 / 标签 / 简介）
 const filteredBooks = computed(() => {
   if (!searchQuery.value.trim()) return store.byCategory
   const query = searchQuery.value.toLowerCase()
   const result = {}
   for (const [category, books] of Object.entries(store.byCategory)) {
-    const filtered = books.filter(book => 
+    const filtered = books.filter(book =>
       book.title.toLowerCase().includes(query) ||
-      book.author?.toLowerCase().includes(query)
+      book.author?.toLowerCase().includes(query) ||
+      (book.tags || store.categoryTags[category] || []).some((t) => t.toLowerCase().includes(query)) ||
+      (book.summary || '').toLowerCase().includes(query)
     )
     if (filtered.length > 0) {
       result[category] = filtered
@@ -150,7 +152,11 @@ function openBook(book) {
             </li>
             <li class="flex items-start gap-2">
               <span class="text-indigo-500">•</span>
-              <span><strong>其他格式</strong>（EPUB、MOBI 等）：请下载后使用相应阅读器打开</span>
+              <span><strong>EPUB 文件</strong>：支持在线翻页阅读，含目录、字体、背景、书签与阅读进度</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-indigo-500">•</span>
+              <span><strong>其他格式</strong>（MOBI、RAR 等）：请下载后使用相应阅读器打开</span>
             </li>
           </ul>
         </div>

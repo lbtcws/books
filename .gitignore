@@ -3,3 +3,9 @@ dist
 *.local
 .DS_Store
 npm-debug.log*
+.env
+backend/.env
+__pycache__/
+*.pyc
+.venv/
+

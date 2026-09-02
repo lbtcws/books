@@ -52,6 +52,16 @@ function open() {
       <p class="mt-1 text-sm text-slate-500">{{ book.author }} · {{ book.year }}</p>
       <p class="mt-2 line-clamp-2 flex-1 text-sm text-slate-500">{{ book.description }}</p>
 
+      <div v-if="book.tags?.length" class="mt-2 flex flex-wrap gap-1">
+        <span
+          v-for="tag in book.tags.slice(0, 3)"
+          :key="tag"
+          class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"
+        >
+          {{ tag }}
+        </span>
+      </div>
+
       <div v-if="percent > 0" class="mt-3">
         <div class="mb-1 flex items-center justify-between text-xs text-slate-400">
           <span>阅读进度</span>
