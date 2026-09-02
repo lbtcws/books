@@ -8,5 +8,9 @@ public/books
 *.backup
 *.mjs
 *.py
-books_data.json
 books_metadata.json
+.env
+.dockerignore
+Dockerfile
+docker-compose.yml
+nginx.conf
