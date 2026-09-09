@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-slate-100">
+  <div class="flex h-full flex-col" style="background-color: var(--app-background); color: var(--app-foreground);">
     <!-- 内容区 -->
     <div ref="scrollRef" class="min-h-0 flex-1 overflow-auto">
       <div v-if="loading" class="flex h-full items-center justify-center">

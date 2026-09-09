@@ -57,6 +57,7 @@ const fileUrl = computed(() => {
 const isFullscreen = ref(false)
 const containerRef = ref(null)
 const pdfViewerRef = ref(null)
+const epubViewerRef = ref(null)
 
 function toggleFullscreen() {
   if (!containerRef.value) return
@@ -78,6 +79,10 @@ function pdfZoomOut() {
   pdfViewerRef.value?.zoomOut()
 }
 
+function toggleEpubToc() {
+  epubViewerRef.value?.toggleToc()
+}
+
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)
 })
@@ -88,9 +93,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="book" ref="containerRef" class="flex h-screen flex-col">
+  <div v-if="book" ref="containerRef" class="flex h-screen flex-col" style="background-color: var(--app-background); color: var(--app-foreground);">
     <!-- 统一标题栏（响应式自适应） -->
-    <div class="shrink-0 flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-200 bg-white px-2 py-1.5 sm:px-3 sm:py-2">
+    <div
+      class="shrink-0 flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-200 px-2 py-1.5 sm:px-3 sm:py-2"
+      style="background-color: var(--app-background); color: var(--app-foreground);"
+    >
       <!-- 左侧：翻页（仅 PDF） -->
       <template v-if="readerType === 'pdf'">
         <el-button-group>
@@ -115,6 +123,18 @@ onBeforeUnmount(() => {
         </div>
       </template>
 
+      <!-- EPUB 操作 -->
+      <template v-if="readerType === 'epub'">
+        <el-button size="small" @click="toggleEpubToc">目录</el-button>
+        <span class="max-w-56 truncate px-1 text-xs text-slate-500" :title="epubViewerRef?.pageLabel">
+          {{ epubViewerRef?.pageLabel || '正文' }}
+        </span>
+        <el-button-group>
+          <el-button size="small" @click="epubViewerRef?.prev()">上一页</el-button>
+          <el-button size="small" @click="epubViewerRef?.next()">下一页</el-button>
+        </el-button-group>
+      </template>
+
       <!-- 中间：标题 + 作者（手机端隐藏作者） -->
       <h2 class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 px-1 sm:px-2">
         {{ book.title }}
@@ -137,13 +157,13 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- 内容区 + 笔记侧栏 -->
-    <div class="flex min-h-0 flex-1">
+    <div class="flex min-h-0 flex-1" style="background-color: var(--app-background); color: var(--app-foreground);">
       <div class="min-w-0 flex-1">
         <!-- PDF 阅读器 -->
         <PdfViewer v-if="readerType === 'pdf'" ref="pdfViewerRef" :book="book" />
 
         <!-- EPUB 阅读器 -->
-        <EpubViewer v-else-if="readerType === 'epub'" :book="book" :file-url="fileUrl" />
+        <EpubViewer v-else-if="readerType === 'epub'" ref="epubViewerRef" :book="book" :file-url="fileUrl" />
 
         <!-- Markdown 阅读器 -->
         <MarkdownViewer v-else-if="readerType === 'markdown'" :book="book" :file-url="fileUrl" />
@@ -156,14 +176,19 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- AI 助手面板 -->
-      <aside v-if="showAI" class="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white sm:w-80">
+      <aside
+        v-if="showAI"
+        class="flex w-72 shrink-0 flex-col border-l border-slate-200 sm:w-80"
+        style="background-color: var(--app-background); color: var(--app-foreground);"
+      >
         <AIChatPanel :book="book" />
       </aside>
 
       <!-- 笔记面板 -->
       <aside
         v-if="showNotes"
-        class="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white sm:w-80"
+        class="flex w-72 shrink-0 flex-col border-l border-slate-200 sm:w-80"
+        style="background-color: var(--app-background); color: var(--app-foreground);"
       >
         <div class="border-b border-slate-200 p-3 text-sm font-semibold text-slate-700">
           我的笔记（{{ bookNotes.length }}）
@@ -200,7 +225,7 @@ onBeforeUnmount(() => {
     </div>
   </div>
 
-  <div v-else class="flex h-[70vh] flex-col items-center justify-center gap-4">
+  <div v-else class="flex h-[70vh] flex-col items-center justify-center gap-4" style="background-color: var(--app-background); color: var(--app-foreground);">
     <p class="text-slate-400">未找到该书籍</p>
     <router-link to="/">
       <el-button type="primary" round>返回书架</el-button>

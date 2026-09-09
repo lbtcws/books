@@ -28,7 +28,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="h-full overflow-auto bg-slate-50">
+  <div class="h-full overflow-auto" style="background-color: var(--app-background); color: var(--app-foreground);">
     <div v-if="loading" class="flex h-full items-center justify-center">
       <div class="flex flex-col items-center gap-3 text-slate-400">
         <el-icon class="is-loading" :size="28"><Loading /></el-icon>

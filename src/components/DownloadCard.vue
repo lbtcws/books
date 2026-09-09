@@ -21,7 +21,7 @@ const formatDescription = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col items-center justify-center bg-slate-50 p-8">
+  <div class="flex h-full flex-col items-center justify-center p-8" style="background-color: var(--app-background); color: var(--app-foreground);">
     <div class="flex flex-col items-center gap-6 text-center">
       <!-- 图标 -->
       <div class="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">

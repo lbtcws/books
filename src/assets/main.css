@@ -12,5 +12,37 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply text-slate-800 antialiased;
+  background-color: var(--app-background, #f8fafc);
+  color: var(--app-foreground, #1e293b);
+}
+
+#app {
+  background-color: var(--app-background, #f8fafc);
+  color: var(--app-foreground, #1e293b);
+}
+
+* {
+  scrollbar-color: var(--app-scrollbar, #c4c8c2) var(--app-background, #f8fafc);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--app-background, #f8fafc);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid var(--app-background, #f8fafc);
+  border-radius: 999px;
+  background: var(--app-scrollbar, #c4c8c2);
+}
+
+.bg-white,
+.bg-slate-50,
+.bg-slate-100 {
+  background-color: var(--app-background, #f8fafc) !important;
 }

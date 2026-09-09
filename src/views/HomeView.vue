@@ -2,13 +2,20 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBooksStore } from '../stores/books'
-import { Search, ArrowRight } from '@element-plus/icons-vue'
+import { Search, ArrowRight, View, Download } from '@element-plus/icons-vue'
+import { applyAppTheme, loadSavedTheme, themes } from '../services/theme'
 
 const store = useBooksStore()
 const router = useRouter()
 
 // 搜索关键词
 const searchQuery = ref('')
+const selectedTheme = ref(loadSavedTheme())
+
+function setTheme(name) {
+  selectedTheme.value = name
+  applyAppTheme(name)
+}
 
 // 分类展开状态
 const expandedCategories = ref(Object.keys(store.byCategory).reduce((acc, cat) => {
@@ -44,6 +51,21 @@ function toggleCategory(category) {
 function openBook(book) {
   router.push({ name: 'reader', params: { id: book.id } })
 }
+
+const readableFormats = new Set(['pdf', 'epub', 'md', 'txt'])
+
+function getFileExtension(book) {
+  return (book.fileName || '').toLowerCase().split('.').pop()
+}
+
+function canRead(book) {
+  return readableFormats.has(getFileExtension(book))
+}
+
+function fileExtension(book) {
+  const extension = getFileExtension(book)
+  return extension ? `.${extension.toUpperCase()}` : ''
+}
 </script>
 
 <template>
@@ -52,13 +74,28 @@ function openBook(book) {
     <aside class="flex w-80 flex-col border-r border-slate-200 bg-white">
       <!-- 搜索框 -->
       <div class="border-b border-slate-200 p-4">
-        <el-input
-          v-model="searchQuery"
-          placeholder="搜索书籍..."
-          :prefix-icon="Search"
-          clearable
-          size="large"
-        />
+        <div class="flex items-center gap-2">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索书籍..."
+            :prefix-icon="Search"
+            clearable
+            size="large"
+          />
+          <el-dropdown @command="setTheme">
+            <el-button size="large" title="设置背景色">
+              背景
+              <span class="ml-1 inline-block h-3 w-3 rounded-full border border-slate-300" :style="{ background: themes[selectedTheme].background }" />
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="light">白色</el-dropdown-item>
+                <el-dropdown-item command="sepia">护眼</el-dropdown-item>
+                <el-dropdown-item command="dark">深色</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </div>
 
       <!-- 书籍列表 -->
@@ -87,8 +124,15 @@ function openBook(book) {
               class="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-sm text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600"
               @click="openBook(book)"
             >
-              <span class="text-base">📄</span>
+              <el-icon
+                class="shrink-0"
+                :class="canRead(book) ? 'text-indigo-500' : 'text-slate-400'"
+                :title="canRead(book) ? '在线查看' : '下载后查看'"
+              >
+                <component :is="canRead(book) ? View : Download" />
+              </el-icon>
               <span class="flex-1 truncate">{{ book.title }}</span>
+              <span class="shrink-0 text-xs uppercase text-slate-400">{{ fileExtension(book) }}</span>
             </div>
           </div>
         </div>
