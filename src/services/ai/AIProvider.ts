@@ -1,6 +1,4 @@
-// AI Provider 抽象层：前端不直接绑定任何 AI 后端。
-// Static Mode（Github Pages）下 StaticAIProvider 返回 disabled；
-// AI Mode 下 RemoteAIProvider 调用本地 FastAPI。
+import { reactive } from 'vue'
 
 export interface AIAnswer {
   enabled: boolean
@@ -18,9 +16,41 @@ export interface AIProvider {
   /** 当前模式是否启用 AI */
   readonly enabled: boolean
   /** 对文本做总结 */
-  summary(text: string): Promise<AIAnswer>
+  summary(text: string, context?: string): Promise<AIAnswer>
   /** 知识库问答 */
-  chat(question: string): Promise<AIAnswer>
+  chat(question: string, context?: string): Promise<AIAnswer>
+}
+
+export interface AIConfig {
+  baseUrl: string
+  apiKey: string
+  model: string
+}
+
+export const AI_CONFIG_KEY = 'books-ai-config'
+const DEFAULT_CONFIG: AIConfig = {
+  baseUrl: 'https://api.openai.com/v1',
+  apiKey: '',
+  model: '',
+}
+
+function loadConfig(): AIConfig {
+  try {
+    return { ...DEFAULT_CONFIG, ...JSON.parse(localStorage.getItem(AI_CONFIG_KEY) || '{}') }
+  } catch {
+    return { ...DEFAULT_CONFIG }
+  }
+}
+
+export const aiConfig = reactive<AIConfig>(loadConfig())
+
+export function saveAIConfig(config: AIConfig) {
+  Object.assign(aiConfig, config)
+  localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(aiConfig))
+}
+
+export function clearAIConfig() {
+  saveAIConfig({ ...DEFAULT_CONFIG })
 }
 
 const DISABLED_ANSWER: AIAnswer = {
@@ -31,11 +61,11 @@ const DISABLED_ANSWER: AIAnswer = {
 export class StaticAIProvider implements AIProvider {
   readonly enabled = false
 
-  async summary(_text: string): Promise<AIAnswer> {
+  async summary(_text: string, _context?: string): Promise<AIAnswer> {
     return DISABLED_ANSWER
   }
 
-  async chat(_question: string): Promise<AIAnswer> {
+  async chat(_question: string, _context?: string): Promise<AIAnswer> {
     return DISABLED_ANSWER
   }
 }
@@ -71,12 +101,52 @@ export class RemoteAIProvider implements AIProvider {
     }
   }
 
-  summary(text: string): Promise<AIAnswer> {
-    return this.post('/api/rag/summary', { text })
+  summary(text: string, context = ''): Promise<AIAnswer> {
+    return this.post('/api/rag/summary', { text: context ? `${context}\n\n${text}` : text })
   }
 
-  chat(question: string): Promise<AIAnswer> {
-    return this.post('/api/rag/chat', { question })
+  chat(question: string, context = ''): Promise<AIAnswer> {
+    return this.post('/api/rag/chat', { question, context })
+  }
+}
+
+class UserAIProvider implements AIProvider {
+  get enabled() {
+    return Boolean(aiConfig.baseUrl.trim() && aiConfig.apiKey.trim() && aiConfig.model.trim())
+  }
+
+  private async complete(messages: Array<{ role: string; content: string }>): Promise<AIAnswer> {
+    if (!this.enabled) return DISABLED_ANSWER
+    try {
+      const baseUrl = aiConfig.baseUrl.trim().replace(/\/+$/, '')
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${aiConfig.apiKey.trim()}`,
+        },
+        body: JSON.stringify({ model: aiConfig.model.trim(), messages, temperature: 0.3 }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`)
+      return { enabled: true, answer: data?.choices?.[0]?.message?.content || '（无回答）' }
+    } catch (e) {
+      return { enabled: true, answer: '', error: `大模型请求失败：${(e as Error).message}` }
+    }
+  }
+
+  summary(text: string, context = '') {
+    return this.complete([
+      { role: 'system', content: '你是用户的私人阅读助手。请基于当前书籍上下文，用中文给出准确、结构化的回答。资料不足时明确说明，不要编造。' },
+      { role: 'user', content: `${context}\n\n请总结以下内容：\n${text.slice(0, 16000)}` },
+    ])
+  }
+
+  chat(question: string, context = '') {
+    return this.complete([
+      { role: 'system', content: '你是用户的私人阅读助手。当前对话只围绕用户正在阅读的这本书展开。请用中文回答，优先引用或解释书籍上下文，资料不足时明确说明。' },
+      { role: 'user', content: `${context}\n\n用户问题：${question}` },
+    ])
   }
 }
 
@@ -84,8 +154,9 @@ export class RemoteAIProvider implements AIProvider {
 export function createAIProvider(): AIProvider {
   const mode = import.meta.env.VITE_MODE || 'static'
   const api = import.meta.env.VITE_AI_API
+  if (aiConfig.baseUrl.trim() && aiConfig.apiKey.trim() && aiConfig.model.trim()) return new UserAIProvider()
   if (mode === 'ai' && api) return new RemoteAIProvider(api)
-  return new StaticAIProvider()
+  return new UserAIProvider()
 }
 
 export const aiProvider: AIProvider = createAIProvider()

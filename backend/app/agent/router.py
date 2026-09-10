@@ -65,13 +65,14 @@ def build_context(sources: list[dict]) -> str:
     return "\n\n".join(blocks) if blocks else "（知识库中未检索到相关内容）"
 
 
-async def run_agent(agent_name: str, question: str, sources: list[dict]) -> str:
+async def run_agent(agent_name: str, question: str, sources: list[dict], book_context: str | None = None) -> str:
     profile = PROFILES[agent_name]
+    context_prefix = f"当前书籍上下文：\n{book_context}\n\n" if book_context else ""
     messages = [
         {"role": "system", "content": profile["system"]},
         {
             "role": "user",
-            "content": f"参考资料：\n\n{build_context(sources)}\n\n问题：{question}",
+            "content": f"{context_prefix}参考资料：\n\n{build_context(sources)}\n\n问题：{question}",
         },
     ]
     return await chat_completion(messages)

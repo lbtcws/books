@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { RefreshLeft } from '@element-plus/icons-vue'
 import ePub from 'epubjs'
 import { useProgressStore } from '../stores/progress'
@@ -20,6 +20,7 @@ const error = ref('')
 const toc = ref([])
 const currentCfi = ref('')
 const currentChapter = ref('')
+const currentChapterHref = ref('')
 const showToc = ref(false)
 let scrollContainer = null
 let lastScrollTop = 0
@@ -45,10 +46,27 @@ function saveSettings() {
 function applyTheme() {
   const r = rendition.value
   if (!r) return
+  const currentTheme = themes[settings.value.theme] || themes.light
   for (const [name, theme] of Object.entries(themes)) {
-    r.themes.register(name, { body: theme })
+    r.themes.register(name, {
+      body: theme,
+      html: {
+        backgroundColor: theme.background,
+        scrollbarColor: `${theme.scrollbar} ${theme.background}`,
+      },
+      '::-webkit-scrollbar': { width: '10px', height: '10px' },
+      '::-webkit-scrollbar-track': { background: theme.background },
+      '::-webkit-scrollbar-thumb': {
+        border: `2px solid ${theme.background}`,
+        borderRadius: '999px',
+        background: theme.scrollbar,
+      },
+    })
   }
   r.themes.select(settings.value.theme)
+  if (containerRef.value) {
+    containerRef.value.style.scrollbarColor = `${currentTheme.scrollbar} ${currentTheme.background}`
+  }
 }
 
 function setFontSize(delta) {
@@ -78,11 +96,34 @@ function locationLabel() {
   return cfi
 }
 
+function normalizeHref(href) {
+  if (!href) return ''
+  const withoutFragment = String(href).split('#')[0]
+  try {
+    return decodeURIComponent(new URL(withoutFragment, 'https://epub.local/').pathname)
+      .replace(/^\/+/, '')
+  } catch {
+    return decodeURIComponent(withoutFragment).replace(/^\/+/, '')
+  }
+}
+
+function findChapterForHref(href) {
+  const normalizedHref = normalizeHref(href)
+  if (!normalizedHref) return null
+
+  return toc.value
+    .filter((item) => {
+      const itemHref = normalizeHref(item.href)
+      return itemHref && (itemHref === normalizedHref || normalizedHref.startsWith(`${itemHref}/`))
+    })
+    .sort((a, b) => normalizeHref(b.href).length - normalizeHref(a.href).length)[0] || null
+}
+
 function updateCurrentLocation(location) {
   currentCfi.value = location?.start?.cfi || ''
   const href = location?.start?.href || ''
-  const chapterHref = href.split('#')[0]
-  const chapter = toc.value.find((item) => item.href?.split('#')[0] === chapterHref)
+  const chapter = findChapterForHref(href)
+  currentChapterHref.value = normalizeHref(chapter?.href || href)
   currentChapter.value = chapter?.label || ''
   if (currentCfi.value) {
     localStorage.setItem(`books-reader-epub-progress:${props.book.id}`, currentCfi.value)
@@ -96,10 +137,22 @@ function addBookmark() {
 }
 
 function tocLabelFor(cfi) {
+  if (cfi === currentCfi.value && currentChapter.value) return currentChapter.value
   const loc = epubBook.value?.locations && epubBook.value.locations.locationFromCfi(cfi)
-  if (loc == null) return ''
-  const item = toc.value.find((t) => t.href && cfi.startsWith(t.href.split('#')[0]))
-  return item?.label || ''
+  return typeof loc === 'object' && loc?.href ? findChapterForHref(loc.href)?.label || '' : ''
+}
+
+function isCurrentChapter(item) {
+  return normalizeHref(item.href) === currentChapterHref.value
+}
+
+async function getCurrentContext() {
+  await nextTick()
+  const frames = [...(containerRef.value?.querySelectorAll('iframe') || [])]
+  const currentFrame = frames.find((frame) => normalizeHref(frame.contentDocument?.location?.href) === currentChapterHref.value)
+    || frames.find((frame) => frame.contentDocument?.body?.innerText?.trim())
+  const text = currentFrame?.contentDocument?.body?.innerText?.trim() || ''
+  return text.slice(0, 16000)
 }
 
 async function goToBookmark(bm) {
@@ -131,8 +184,20 @@ function onScroll() {
 }
 
 function bindScroll() {
-  scrollContainer = rendition.value?.manager?.container || null
-  if (!scrollContainer) return
+  // 优先使用 epubjs 的 manager container
+  const managerContainer = rendition.value?.manager?.container
+  if (managerContainer) {
+    scrollContainer = managerContainer
+    lastScrollTop = scrollContainer.scrollTop
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true })
+    return
+  }
+
+  // 回退到 containerRef
+  const container = containerRef.value
+  if (!container) return
+
+  scrollContainer = container
   lastScrollTop = scrollContainer.scrollTop
   scrollContainer.addEventListener('scroll', onScroll, { passive: true })
 }
@@ -214,6 +279,8 @@ async function loadEpub() {
     await r.display(savedCfi || undefined)
     updateCurrentLocation(r.currentLocation())
     applyTheme()
+    // 延迟绑定滚动监听，确保 DOM 已渲染
+    await nextTick()
     bindScroll()
     loading.value = false
   } catch (e) {
@@ -237,7 +304,7 @@ function destroyBook() {
 
 const pageLabel = computed(() => currentChapter.value || '正文')
 
-defineExpose({ prev, next, setTheme, toggleToc, themeBackground, pageLabel, currentCfi, locationLabel })
+defineExpose({ prev, next, setTheme, toggleToc, themeBackground, pageLabel, currentCfi, locationLabel, getCurrentContext })
 
 onMounted(() => {
   loadEpub()
@@ -267,6 +334,22 @@ const bookBookmarks = computed(() => bookmarks.byBook(props.book.id))
       </el-result>
       <div ref="containerRef" class="h-full w-full overflow-y-auto" :style="{ visibility: error ? 'hidden' : 'visible' }" />
 
+      <!-- 悬浮翻页控件（底部边缘轻巧提示） -->
+      <div v-if="!loading && !error" class="pointer-events-none absolute bottom-3 left-0 right-0 flex justify-center gap-3 px-4">
+        <div
+          class="pointer-events-auto flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-md backdrop-blur transition hover:shadow-lg"
+          :style="{ backgroundColor: themeBackground, color: themeColor, borderColor: themeColor }"
+        >
+          <el-button size="small" text :style="{ color: themeColor }" @click="prev">
+            上一节
+          </el-button>
+          <span class="px-1 text-xs" :style="{ color: themeColor }">{{ pageLabel }}</span>
+          <el-button size="small" text :style="{ color: themeColor }" @click="next">
+            下一节
+          </el-button>
+        </div>
+      </div>
+
       <!-- 目录 / 书签抽屉 -->
       <div
         v-if="showToc"
@@ -282,6 +365,7 @@ const bookBookmarks = computed(() => bookmarks.byBook(props.book.id))
             v-for="(item, i) in toc"
             :key="i"
             class="cursor-pointer truncate rounded px-2 py-1.5 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"
+            :class="{ 'bg-indigo-100 font-medium text-indigo-700': isCurrentChapter(item) }"
             :style="{ paddingLeft: `${8 + item.depth * 14}px` }"
             @click="goToToc(item.href)"
           >

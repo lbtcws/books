@@ -15,7 +15,7 @@ _SUMMARY_SYSTEM = "你是专业的内容总结助手。请基于给定文本输�
 async def rag_chat(req: ChatRequest):
     agent_name = route_agent(req)
     sources = await retrieve(req.question, doc_id=req.book_id)
-    answer = await run_agent(agent_name, req.question, sources)
+    answer = await run_agent(agent_name, req.question, sources, req.context)
     seen: set[str] = set()
     uniq: list[Source] = []
     for s in sources:

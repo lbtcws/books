@@ -8,6 +8,7 @@ class ChatRequest(BaseModel):
     question: str
     book_id: Optional[str] = None
     agent: Optional[str] = None  # reader | knowledge | investment | assistant
+    context: Optional[str] = None
 
 
 class Source(BaseModel):

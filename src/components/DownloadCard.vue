@@ -14,7 +14,7 @@ const fileExt = computed(() => {
 const formatDescription = computed(() => {
   const ext = fileExt.value
   if (ext === 'EPUB') return 'EPUB 格式建议下载后使用阅读器打开'
-  if (ext === 'MOBI') return 'MOBI 格式建议下载后使用 Kindle 阅读器打开'
+  if (ext === 'MOBI') return 'MOBI 格式已支持在线阅读，亦可下载后使用 Kindle 阅读器打开'
   if (ext === 'RAR' || ext === 'ZIP') return '压缩包格式，请下载后解压查看'
   return `${ext} 格式暂不支持在线预览，请下载后查看`
 })

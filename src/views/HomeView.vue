@@ -2,8 +2,9 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBooksStore } from '../stores/books'
-import { Search, ArrowRight, View, Download } from '@element-plus/icons-vue'
+import { Search, ArrowRight, View, Download, Setting } from '@element-plus/icons-vue'
 import { applyAppTheme, loadSavedTheme, themes } from '../services/theme'
+import { aiConfig, aiProvider, saveAIConfig } from '../services/ai/AIProvider'
 
 const store = useBooksStore()
 const router = useRouter()
@@ -11,10 +12,23 @@ const router = useRouter()
 // 搜索关键词
 const searchQuery = ref('')
 const selectedTheme = ref(loadSavedTheme())
+const showAISettings = ref(false)
+const aiDraft = ref({ ...aiConfig })
+const aiConfigured = computed(() => aiProvider.enabled)
 
 function setTheme(name) {
   selectedTheme.value = name
   applyAppTheme(name)
+}
+
+function openAISettings() {
+  aiDraft.value = { ...aiConfig }
+  showAISettings.value = true
+}
+
+function saveAISettings() {
+  saveAIConfig({ ...aiDraft.value })
+  showAISettings.value = false
 }
 
 // 分类展开状态
@@ -52,7 +66,7 @@ function openBook(book) {
   router.push({ name: 'reader', params: { id: book.id } })
 }
 
-const readableFormats = new Set(['pdf', 'epub', 'md', 'txt'])
+const readableFormats = new Set(['pdf', 'epub', 'mobi', 'md', 'txt'])
 
 function getFileExtension(book) {
   return (book.fileName || '').toLowerCase().split('.').pop()
@@ -95,6 +109,15 @@ function fileExtension(book) {
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          <el-button
+            size="large"
+            circle
+            :icon="Setting"
+            :title="aiConfigured ? '设置（大模型已配置）' : '设置大模型'"
+            aria-label="设置"
+            class="!border-[var(--app-foreground)] !bg-[var(--app-background)] !text-[var(--app-foreground)]"
+            @click="openAISettings"
+          />
         </div>
       </div>
 
@@ -200,12 +223,42 @@ function fileExtension(book) {
             </li>
             <li class="flex items-start gap-2">
               <span class="text-indigo-500">•</span>
-              <span><strong>其他格式</strong>（MOBI、RAR 等）：请下载后使用相应阅读器打开</span>
+              <span><strong>MOBI 文件</strong>：支持在线翻页与章节阅读，含目录、字体、背景、书签与阅读进度</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-indigo-500">•</span>
+              <span><strong>其他格式</strong>（RAR、ZIP 等）：请下载后使用相应阅读器打开</span>
             </li>
           </ul>
         </div>
       </div>
     </main>
+
+    <el-dialog v-model="showAISettings" title="大模型配置" width="min(92vw, 560px)">
+      <div class="space-y-4">
+        <p class="text-sm text-slate-500">
+          配置会保存在当前浏览器中。阅读页面的 AI 助手会直接调用你填写的 OpenAI 兼容接口。
+        </p>
+        <el-form label-position="top">
+          <el-form-item label="Base URL">
+            <el-input v-model="aiDraft.baseUrl" placeholder="https://api.openai.com/v1" />
+          </el-form-item>
+          <el-form-item label="API Key">
+            <el-input v-model="aiDraft.apiKey" type="password" show-password placeholder="sk-..." />
+          </el-form-item>
+          <el-form-item label="模型 ID">
+            <el-input v-model="aiDraft.model" placeholder="例如：gpt-4o-mini、deepseek-chat" />
+          </el-form-item>
+        </el-form>
+        <p class="text-xs text-slate-400">
+          Base URL 应指向兼容接口的根路径，例如以 `/v1` 结尾；API Key 仅用于浏览器直接请求，不会上传到本项目服务器。
+        </p>
+      </div>
+      <template #footer>
+        <el-button @click="showAISettings = false">取消</el-button>
+        <el-button type="primary" @click="saveAISettings">保存配置</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

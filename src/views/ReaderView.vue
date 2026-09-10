@@ -6,6 +6,7 @@ import { useBooksStore } from '../stores/books'
 import { useNotesStore } from '../stores/notes'
 import PdfViewer from '../components/PdfViewer.vue'
 import EpubViewer from '../components/EpubViewer.vue'
+import MobiViewer from '../components/MobiViewer.vue'
 import MarkdownViewer from '../components/MarkdownViewer.vue'
 import TextViewer from '../components/TextViewer.vue'
 import DownloadCard from '../components/DownloadCard.vue'
@@ -24,9 +25,10 @@ const readerType = computed(() => {
   const ext = book.value.file.toLowerCase().split('.').pop()
   if (ext === 'pdf') return 'pdf'
   if (ext === 'epub') return 'epub'
+  if (ext === 'mobi') return 'mobi'
   if (ext === 'md') return 'markdown'
   if (ext === 'txt') return 'text'
-  return 'download' // mobi, rar 等其他格式
+  return 'download' // rar 等其他格式
 })
 
 // AI 助手面板
@@ -58,6 +60,7 @@ const isFullscreen = ref(false)
 const containerRef = ref(null)
 const pdfViewerRef = ref(null)
 const epubViewerRef = ref(null)
+const mobiViewerRef = ref(null)
 
 function toggleFullscreen() {
   if (!containerRef.value) return
@@ -81,6 +84,16 @@ function pdfZoomOut() {
 
 function toggleEpubToc() {
   epubViewerRef.value?.toggleToc()
+}
+
+function toggleMobiToc() {
+  mobiViewerRef.value?.toggleToc()
+}
+
+async function getReaderContext() {
+  if (readerType.value === 'epub') return epubViewerRef.value?.getCurrentContext?.() || ''
+  if (readerType.value === 'mobi') return mobiViewerRef.value?.getCurrentContext?.() || ''
+  return ''
 }
 
 onMounted(() => {
@@ -129,10 +142,17 @@ onBeforeUnmount(() => {
         <span class="max-w-56 truncate px-1 text-xs text-slate-500" :title="epubViewerRef?.pageLabel">
           {{ epubViewerRef?.pageLabel || '正文' }}
         </span>
-        <el-button-group>
-          <el-button size="small" @click="epubViewerRef?.prev()">上一页</el-button>
-          <el-button size="small" @click="epubViewerRef?.next()">下一页</el-button>
-        </el-button-group>
+      </template>
+
+      <!-- MOBI 操作 -->
+      <template v-if="readerType === 'mobi'">
+        <el-button size="small" @click="toggleMobiToc">目录</el-button>
+        <span class="max-w-56 truncate px-1 text-xs text-slate-500" :title="mobiViewerRef?.pageLabel">
+          {{ mobiViewerRef?.pageLabel || '正文' }}
+        </span>
+        <div class="hidden sm:flex items-center gap-1 text-xs text-slate-500">
+          <span>{{ (mobiViewerRef?.currentSectionIndex ?? 0) + 1 }} / {{ mobiViewerRef?.sectionCount || 1 }}</span>
+        </div>
       </template>
 
       <!-- 中间：标题 + 作者（手机端隐藏作者） -->
@@ -165,6 +185,9 @@ onBeforeUnmount(() => {
         <!-- EPUB 阅读器 -->
         <EpubViewer v-else-if="readerType === 'epub'" ref="epubViewerRef" :book="book" :file-url="fileUrl" />
 
+        <!-- MOBI 阅读器 -->
+        <MobiViewer v-else-if="readerType === 'mobi'" ref="mobiViewerRef" :book="book" :file-url="fileUrl" />
+
         <!-- Markdown 阅读器 -->
         <MarkdownViewer v-else-if="readerType === 'markdown'" :book="book" :file-url="fileUrl" />
 
@@ -181,7 +204,7 @@ onBeforeUnmount(() => {
         class="flex w-72 shrink-0 flex-col border-l border-slate-200 sm:w-80"
         style="background-color: var(--app-background); color: var(--app-foreground);"
       >
-        <AIChatPanel :book="book" />
+        <AIChatPanel :book="book" :get-reader-context="getReaderContext" />
       </aside>
 
       <!-- 笔记面板 -->
